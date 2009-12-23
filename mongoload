@@ -1,0 +1,168 @@
+#!/usr/bin/env ruby
+#
+# == Synopsis
+# Test load for reading and writing from a MongoDB Database
+# Waits a random amount of time between a specified range 
+# between operations
+#
+# == Usage
+# mongoload [options]
+# where [options] is one of the following:
+#   -v  --version  Show the version of the script
+#   -h  --help     Show this screen
+#   -r  --read     Perform read operations (default)
+#   -w  --write    Perform write operations
+#   -m  --min      Minimum sleep time (default: 1)
+#   -M  --max      Maximum sleep time (default: 5)
+#   -H  --host     Host string for mongo (default: "localhost")
+#   -p  --port     Port to connect to (default: 2217)
+#   -d  --db       Database to use (default: mongoload_test)
+#
+# == Example
+# Reads from MongoDB in a loop
+#   mongoload --read -m 1 -M 3
+#
+# == Author
+# Tim Gourley (mailto:tgourley@engineyard.com)
+
+
+
+require 'rubygems'
+require 'optparse' 
+require 'rdoc/usage'
+require 'ostruct'
+require 'mongo'
+
+class Mongoload
+  VERSION = '0.1.0'
+  attr_accessor :options, :database
+  
+  # Set up the Mongoload class with default options
+  def initialize(arguments, stdin)
+    @arguments = arguments
+    @stdin = stdin
+    @options = OpenStruct.new
+    set_defaults
+  end
+  
+  # Our only public method; do the actual work
+  def run
+    if parsed_options? && arguments_valid?
+      puts "Connecting to MongoDB instance on #{@options.host}:#{@options.port}..."
+      @database = Mongo::Connection.new(@options.host, @options.port).db(@options.db)
+      loop do
+        if @options.operation == :read
+          mongodb_read
+        else
+          mongodb_write
+        end
+        sleeping_for = (rand(@options.max) + @options.min).to_i
+        sleep(sleeping_for)
+      end
+    else
+      output_usage
+    end
+  end
+  
+  protected
+  
+  # Parse valid command line options passed to the script.
+  # This also sets up the actions to be taken for various
+  # options.
+  def parsed_options?
+    opts = OptionParser.new
+    opts.on('-v', '--version')  { output_version; exit 0 }
+    opts.on('-h', '--help')     { output_usage }
+    
+    opts.on('-r', '--read')            { @options.operation = :read }
+    opts.on('-w', '--write')           { @options.operation = :write }
+    opts.on('-m', '--min i', Integer)  { |min| @options.min = min }
+    opts.on('-M', '--max i', Integer)  { |max| @options.max = max }
+    opts.on('-H', '--host s', String)  { |host| @options.host = host }    
+    opts.on('-d', '--db s', String)    { |db| @options.db = db }
+    opts.on('-p', '--port i', Integer) { |port| @options.port = port }
+    
+    opts.parse!(@arguments) rescue return false
+    true
+  end
+  
+  # Sanity check the arguments
+  def arguments_valid?
+    (@options.min > @options.max) ? false : true
+  end
+  
+  # Show the usage statement
+  def output_usage
+    output_version
+    RDoc::usage('usage') # gets usage from comments above
+  end
+  
+  # Output the version of the script
+  def output_version
+    puts "#{File.basename(__FILE__)} version #{VERSION}"
+  end
+  
+  private
+  
+  # Set the default options for the script. 
+  def set_defaults    
+    @options.operation = :read
+    @options.min = 1
+    @options.max = 5
+    @options.host = 'localhost'
+    @options.port = 2217
+    @options.db = 'mongoload_test'
+  end
+  
+  # Generate a dummy JSON document to insert into MongoDB
+  def dummy_document
+    doc = { 
+      "ticket" => "Updated ticket", 
+      "updates" => [
+    	  {
+    	  	"group" => "Application Support - Classic",
+    	  	"ticket_type" => "Problem",
+    	  	"priority" => "Urgent",
+    	  	"status" => "Open",
+    	  	"score" => 0
+    	  }
+      ], 
+      "url" => "http://localhost/12345", 
+      "tags" => [ 'test', 'tags', 'ftw' ], 
+      "contacts" => [
+    	{
+    		"name" => "Requester Bill",
+    		"last_name" => "Bill",
+    		"org_name" => "We don't got no rspec",
+    		"cc_names" => [
+    			"someone@somewhere.org",
+    			"something@someoneelse.com"
+    		],
+    		"first_name" => "Requester",
+    		"email" => "no_rspec@wedontgot.com"
+    	},
+    	{
+    		"name" => "Assignee Bob",
+    		"last_name" => "Bob",
+    		"first_name" => "Assignee"
+    	}
+      ], 
+      "zendesk_id" => 12345
+    }        
+  end
+  
+  def mongodb_read
+    collection = @database.collection("mongoload_test_data")
+    document = collection.find_one()
+    puts "Ran find_one against #{collection.count()} documents in mongoload_test_data"
+  end
+  
+  def mongodb_write
+    collection = @database.collection("mongoload_test_data")
+    collection.insert(dummy_document())
+    puts "Inserted data into mongoload_test_data"
+  end
+end
+
+mongoload = Mongoload.new(ARGV, STDIN)
+mongoload.run
