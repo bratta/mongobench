@@ -1,4 +1,5 @@
-# Mongo Scripts
+Mongo Scripts
+=============
 
 This repository will contain a bunch of small scripts designed to help make administering 
 MongoDB as painless as possible. Here you will find scripts for benchmarking, load testing, 
