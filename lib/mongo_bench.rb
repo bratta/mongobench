@@ -57,7 +57,10 @@ class MongoBench
     loop do
       # Break out of the loop if we've exceeded the max time, or if we've exceeded the max iterations (and iterations != 0)
       break if (Time.now.to_i >= (start_time.to_i + @options.time) || (@options.iterations != 0) ? averages.count >= @options.iterations : false)
-      averages << @mq.send("#{@options.test}_test".to_sym, thread_id)
+      test_start_time = Time.now.to_f
+      @mq.send("#{@options.test}_test".to_sym, thread_id)
+      test_end_time = Time.now.to_f
+      averages << test_end_time - test_start_time
       sleeping_for = (rand(@options.max) + @options.min).to_i
       sleep(sleeping_for)
     end

@@ -36,11 +36,8 @@ Adding your own tests is as easy as adding a new method to the MongoQueries clas
 
   def testname_test(id)
   
-The "id" parameter is the worker thread ID (used for logging). Your function should return a float that represents the time it took to execute the test. For example, here is the simple test, which just performs a find_one:
+The "id" parameter is the worker thread ID (used for logging). For example, here is the simple test, which just performs a find_one:
 
   def simple_test(id)
-    start_time = Time.now.to_f
     document = @collection.find_one()
-    end_time = Time.now.to_f
-    end_time - start_time
   end
