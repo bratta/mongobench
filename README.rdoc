@@ -22,4 +22,10 @@ That will give you a rundown of what options and tests are available to you. An 
 
   mongobench --threads 20 --max_sleep 0 --time 30 --run simple
   
-That will run the simple test (a find_one) for 30 seconds, spinning up 20 threads to perform the test, not sleeping at all between requests to the database.
+That will run the simple test (a find_one) for 30 seconds, spinning up 20 threads to perform the test, not sleeping at all between requests to the database. 
+
+A neat thing to try is to open another window and run mongosniff to see the traffic as you run the benchmarks. Something like this:
+
+  sudo mongosniff --source NET lo0
+  
+Or whatever interface the traffic will be flowing over.

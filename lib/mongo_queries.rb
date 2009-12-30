@@ -50,6 +50,27 @@ class MongoQueries
     end_time - start_time
   end
   
+  def indexed_mapreduce_test(id)
+    start_time = Time.now.to_f
+    map_fn = "function(){ emit(this.k, 1)}"
+    reduce_fn ="function(k,vals) { return 1; }"
+    mr_collection = @collection.map_reduce(map_fn, reduce_fn, { :query => { 'k' => { '$gt' => 10 } } } )
+    mr_collection.drop()
+    end_time = Time.now.to_f
+    end_time - start_time
+  end  
+  
+  def nonindexed_mapreduce_test(id)
+    start_time = Time.now.to_f
+    map_fn = "function(){ this.tags.forEach(function(z){ emit(z, { count : 1 }); });};"
+    reduce_fn ="function(key, values) { var total = 0; for (var i=0; i<values.length; i++) {total += values[i].count; } return { count : total };};"
+    mr_collection = @collection.map_reduce(map_fn, reduce_fn)
+    mr_collection.drop()
+    end_time = Time.now.to_f
+    end_time - start_time    
+  end
+
+  
   private 
   
   def generate_tags(length)

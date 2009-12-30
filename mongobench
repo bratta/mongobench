@@ -11,7 +11,6 @@
 #   -v  --version      Show the version of the script
 #   -h  --help         Show this screen
 #   -r  --run <test>   Perform the test <test> (default: simple)
-#   -w  --write        Perform simple write operations
 #   -m  --min-sleep    Minimum sleep time (default: 0)
 #   -M  --max-sleep    Maximum sleep time (default: 5)
 #   -t  --time         Time in seconds for each thread to run (default: 300)

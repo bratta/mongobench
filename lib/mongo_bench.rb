@@ -12,7 +12,7 @@ class MongoBench
     parse_options
 
     puts "Connecting to MongoDB instance on #{@options.host}:#{@options.port}..."
-    @database = Mongo::Connection.new(@options.host, @options.port).db(@options.db)    
+    @database = Mongo::Connection.new(@options.host, @options.port, :pool_size => @options.threads, :timeout => 5).db(@options.db)    
     @mq = MongoQueries.new(@database, :collection => @collection)   
     if !@mq.respond_to?("#{@options.test}_test".to_sym)
       puts "Invalid test #{@options.test}. Valid choices are: #{MongoQueries.tests.join(', ')}"
