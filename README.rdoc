@@ -1,6 +1,25 @@
-Mongo Scripts
-=============
+== MongoBench
 
-This repository will contain a bunch of small scripts designed to help make administering 
-MongoDB as painless as possible. Here you will find scripts for benchmarking, load testing, 
-backups, and so forth. Feel free to add your own.
+Benchmarking tool for the MongoDB Ruby driver. The goal is to contain functionality to test and time different types of queries in a configurable environment. The main executable, mongobench, can be run with many different flags and invoking a number of tests.
+
+== Installation
+
+You need an accessible installation of MongoDB. It does not have to be running locally as you can specify the hostname and port of the MongoDB instance from the command line.
+
+You will need the mongo gem installed. For optimal performance, make sure to install the mongo_ext gem as well:
+
+  sudo gem install mongo mongo_ext
+  
+No other gem requirements are needed at this time.
+
+== Running
+
+For basic usage, see this:
+
+  mongobench --help
+  
+That will give you a rundown of what options and tests are available to you. An example run would be like this:
+
+  mongobench --threads 20 --max_sleep 0 --time 30 --run simple
+  
+That will run the simple test (a find_one) for 30 seconds, spinning up 20 threads to perform the test, not sleeping at all between requests to the database.
