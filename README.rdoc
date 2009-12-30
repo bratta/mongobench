@@ -29,3 +29,18 @@ A neat thing to try is to open another window and run mongosniff to see the traf
   sudo mongosniff --source NET lo0
   
 Or whatever interface the traffic will be flowing over.
+
+== Adding tests
+
+Adding your own tests is as easy as adding a new method to the MongoQueries class. It takes the format of:
+
+  def testname_test(id)
+  
+The "id" parameter is the worker thread ID (used for logging). Your function should return a float that represents the time it took to execute the test. For example, here is the simple test, which just performs a find_one:
+
+  def simple_test(id)
+    start_time = Time.now.to_f
+    document = @collection.find_one()
+    end_time = Time.now.to_f
+    end_time - start_time
+  end
