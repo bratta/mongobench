@@ -43,8 +43,23 @@ class MongoBench
   end
   
   def cleanup
-    puts "Cleaning up database post-run"
+    puts "Cleaning up database"
     @mq.purge_collection
+  end
+  
+  def main
+    case @options.step
+    when :prepare
+      prepare()
+    when :cleanup
+      cleanup()
+    when :run
+      run()
+    when :all
+      prepare()
+      run()
+      cleanup()
+    end
   end
   
   protected
@@ -87,6 +102,11 @@ class MongoBench
     opts.on('-T', '--threads i', Integer)   { |threads| @options.threads = threads }
     opts.on('-D', '--documents i', Integer) { |documents| @options.documents = documents }
     opts.on('-i', '--iterations i', Integer){ |iterations| @options.iterations = iterations }
+    
+    opts.on('-P', '--prepare') { @options.step = :prepare }
+    opts.on('-C', '--cleanup') { @options.step = :cleanup }
+    opts.on('-R', '--runonly') { @options.step = :run }
+    opts.on('-A', '--all')     { @options.step = :all }
     
     opts.parse!(@arguments) rescue return false
     true
@@ -134,5 +154,6 @@ class MongoBench
     @options.threads = 1
     @options.documents = 20000
     @options.iterations = 0
+    @options.step = :all
   end
 end

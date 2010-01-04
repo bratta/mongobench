@@ -21,6 +21,9 @@
 #   -D  --documents    Number of documents for the test collection (default: 20000)
 #   -i  --iterations   Number of times to run the test before quitting (default: 0)
 #                      0 = infinite. Note that the --time flag has precedence
+#   -P  --prepare      Only perform the prepare step
+#   -C  --cleanup      Only perform the cleanup step
+#   -R  --runonly      Only perform the run step
 #
 # == Example
 # Reads from MongoDB in a loop for 300 seconds using the simple tests
@@ -39,6 +42,4 @@ require 'lib/mongo_bench'
 require 'lib/mongo_queries'
 
 mb = MongoBench.new(ARGV, STDIN)
-mb.prepare
-mb.run
-mb.cleanup
+mb.main
