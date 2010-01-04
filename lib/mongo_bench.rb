@@ -56,7 +56,7 @@ class MongoBench
     averages = Array.new
     loop do
       # Break out of the loop if we've exceeded the max time, or if we've exceeded the max iterations (and iterations != 0)
-      break if (Time.now.to_i >= (start_time.to_i + @options.time) || (@options.iterations != 0) ? averages.count >= @options.iterations : false)
+      break if (Time.now.to_i >= (start_time.to_i + @options.time) || (@options.iterations != 0) ? averages.length >= @options.iterations : false)
       test_start_time = Time.now.to_f
       @mq.send("#{@options.test}_test".to_sym, thread_id)
       test_end_time = Time.now.to_f
@@ -65,7 +65,7 @@ class MongoBench
       sleep(sleeping_for)
     end
     average = averages.inject { |sum, el| sum + el}.to_f / averages.size
-    puts "Worker thread #{thread_id} run time: #{Time.now.to_i - start_time.to_i} - iterations: #{averages.count} - average: #{average}"
+    puts "Worker thread #{thread_id} run time: #{Time.now.to_i - start_time.to_i} - iterations: #{averages.length} - average: #{average}"
   end
   
   
@@ -128,7 +128,7 @@ class MongoBench
     @options.min = 0
     @options.max = 5
     @options.host = 'localhost'
-    @options.port = 2217
+    @options.port = 27017
     @options.db = 'mongobench_test'
     @options.time = 300
     @options.threads = 1
