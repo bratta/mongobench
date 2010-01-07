@@ -18,6 +18,8 @@
 #   -H  --host         Host string for mongo (default: "localhost")
 #   -p  --port         Port to connect to (default: 2217)
 #   -d  --db           Database to use (default: mongobench_test)
+#   -u  --user         Auth user (default: none)
+#   -w  --password     Auth password (default: none)
 #   -D  --documents    Number of documents for the test collection (default: 20000)
 #   -i  --iterations   Number of times to run the test before quitting (default: 0)
 #                      0 = infinite. Note that the --time flag has precedence

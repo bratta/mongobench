@@ -11,8 +11,18 @@ class MongoBench
     
     parse_options
 
-    puts "Connecting to MongoDB instance on #{@options.host}:#{@options.port}..."
+    user_string = " as user #{@options.user}" if @options.user
+    puts "Connecting to MongoDB instance on #{@options.host}:#{@options.port}#{user_string}..."
     @database = Mongo::Connection.new(@options.host, @options.port, :pool_size => @options.threads, :timeout => 5).db(@options.db)    
+
+    if (@options.user && @options.password)
+      auth = @database.authenticate(@options.user, @options.password)
+      if !auth
+        puts "Invalid username/password for user #{@options.user}"
+        exit 1
+      end
+    end
+
     @mq = MongoQueries.new(@database, :collection => @collection)   
     if !@mq.respond_to?("#{@options.test}_test".to_sym)
       puts "Invalid test #{@options.test}. Valid choices are: #{MongoQueries.tests.join(', ')}"
@@ -98,6 +108,8 @@ class MongoBench
     opts.on('-H', '--host s', String)       { |host| @options.host = host }    
     opts.on('-d', '--db s', String)         { |db| @options.db = db }
     opts.on('-p', '--port i', Integer)      { |port| @options.port = port }
+    opts.on('-u', '--user s', String)       { |user| @options.user = user }
+    opts.on('-w', '--password s', String)   { |password| @options.password = password }
     opts.on('-t', '--time i', Integer)      { |time| @options.time = time }
     opts.on('-T', '--threads i', Integer)   { |threads| @options.threads = threads }
     opts.on('-D', '--documents i', Integer) { |documents| @options.documents = documents }
@@ -114,7 +126,11 @@ class MongoBench
   
   # Sanity check the arguments
   def arguments_valid?
-    (@options.min > @options.max) ? false : true
+    valid_args = true
+    valid_args = false if @options.min > @options.max
+    valid_args = false if @options.user && !@options.password
+    valid_args = false if @options.password && !@options.user
+    valid_args
   end
   
   # Show the usage statement
