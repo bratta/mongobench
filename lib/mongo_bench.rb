@@ -1,6 +1,6 @@
 class MongoBench
   VERSION = '0.1.0'
-  attr_accessor :options, :database, :collection, :mq
+  attr_accessor :options, :collection, :mq
   
   # Set up the Mongoload class with default options
   def initialize(arguments, stdin)
@@ -11,23 +11,7 @@ class MongoBench
     
     parse_options
 
-    user_string = " as user #{@options.user}" if @options.user
-    puts "Connecting to MongoDB instance on #{@options.host}:#{@options.port}#{user_string}..."
-    @database = Mongo::Connection.new(@options.host, @options.port, :pool_size => @options.threads, :timeout => 5).db(@options.db)    
-
-    if (@options.user && @options.password)
-      auth = @database.authenticate(@options.user, @options.password)
-      if !auth
-        puts "Invalid username/password for user #{@options.user}"
-        exit 1
-      end
-    end
-
-    @mq = MongoQueries.new(@database, :collection => @collection)   
-    if !@mq.respond_to?("#{@options.test}_test".to_sym)
-      puts "Invalid test #{@options.test}. Valid choices are: #{MongoQueries.tests.join(', ')}"
-      exit 1
-    end
+    @mq = get_test_runner(@collection)
   end
   
   
@@ -77,13 +61,14 @@ class MongoBench
   # Create a specific number of threads and run the test until
   # the time limit has reached.
   def worker_thread(thread_id)
+    mq = get_test_runner(@collection)
     start_time = Time.now
     averages = Array.new
     loop do
       # Break out of the loop if we've exceeded the max time, or if we've exceeded the max iterations (and iterations != 0)
       break if (Time.now.to_i >= (start_time.to_i + @options.time) || (@options.iterations != 0) ? averages.length >= @options.iterations : false)
       test_start_time = Time.now.to_f
-      @mq.send("#{@options.test}_test".to_sym, thread_id)
+      mq.send("#{@options.test}_test".to_sym, thread_id)
       test_end_time = Time.now.to_f
       averages << test_end_time - test_start_time
       sleeping_for = (rand(@options.max) + @options.min).to_i
@@ -171,5 +156,32 @@ class MongoBench
     @options.documents = 20000
     @options.iterations = 0
     @options.step = :all
+  end
+  
+  def get_connection
+    user_string = " as user #{@options.user}" if @options.user
+    puts "Connecting to MongoDB instance on #{@options.host}:#{@options.port}#{user_string}..."
+    # :pool_size option removed for now -- connection pooling does not send auth credentials as of 1.2.4
+    database = Mongo::Connection.new(@options.host, @options.port).db(@options.db)    
+
+    if (@options.user && @options.password)
+      auth = database.authenticate(@options.user, @options.password)
+      if !auth
+        puts "Invalid username/password for user #{@options.user}"
+        exit 1
+      end
+    end
+    
+    database
+  end
+  
+  def get_test_runner(collection, database=nil)
+    database = get_connection() if database.nil?
+    mq = MongoQueries.new(database, :collection => collection)   
+    if !mq.respond_to?("#{@options.test}_test".to_sym)
+      puts "Invalid test #{@options.test}. Valid choices are: #{MongoQueries.tests.join(', ')}"
+      exit 1
+    end    
+    mq
   end
 end
